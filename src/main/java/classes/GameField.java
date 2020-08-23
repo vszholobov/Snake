@@ -10,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+// Создай класс яблока и змеи
 public class GameField extends JPanel implements ActionListener {
     // Размер в пикселях одной клетки поля
     private final int DOT_SIZE = 16;
@@ -21,28 +22,22 @@ public class GameField extends JPanel implements ActionListener {
     // Отвечает за скорость игры. Чем меньше, тем быстрее.
     private int speed = 35;
 
-    private Image dot;
-    private Image apple;
+    private Apple apple;
+    private Snake snake;
 
-    private int appleX;
-    private int appleY;
-
-    private final ArrayList<Cords> SNAKE_CORDS = new ArrayList<>();
-
-    private boolean left = false;
-    private boolean right = true;
-    private boolean up = false;
-    private boolean down = false;
-
-    private boolean moveKeyPressed = false;
-    private boolean inGame = true;
+    // Направления движения змейки
+    private enum Direction {
+        left,
+        right,
+        up,
+        down
+    }
 
     public GameField(Dimension windowSize) {
         this.WIDTH = windowSize.width;
         this.HEIGHT = windowSize.height;
 
         this.setBackground(Color.black);
-        this.loadImages();
         this.initGame();
         this.addKeyListener(new FieldKeyListener());
         this.setFocusable(true);
@@ -52,50 +47,33 @@ public class GameField extends JPanel implements ActionListener {
                 new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(), null));
     }
 
-    public void initGame(){
-        int snakeLength = 3;
-        for(int i = 0; i < snakeLength; i++) {
-            SNAKE_CORDS.add(new Cords(this.DOT_SIZE * 5, this.DOT_SIZE * 5));
+    public void initGame() {
+        try {
+            Image appleIcon = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/apple.png"));
+            Image snakeIcon = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/dot.png"));
+            this.apple = new Apple(appleIcon);
+            this.snake = new Snake(snakeIcon, 3);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         Timer timer = new Timer(this.speed, this);
         timer.start();
 
-        createApple();
+        this.apple.create();
     }
 
     public void setSpeed(int speed) {
         this.speed = speed;
     }
 
-    public void createApple(){
-         while(true) {
-             this.appleX = new Random().nextInt(this.WIDTH / this.DOT_SIZE) * this.DOT_SIZE;
-             this.appleY = new Random().nextInt(this.HEIGHT / this.DOT_SIZE) * this.DOT_SIZE;
-             Cords appleCords = new Cords(appleX, appleY);
-
-             if(this.SNAKE_CORDS.contains(appleCords)) {
-                 continue;
-             }
-             break;
-        }
-    }
-
-    public void loadImages() {
-        try {
-            this.apple = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/apple.png"));
-            this.dot = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/dot.png"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if(this.inGame){
-            g.drawImage(this.apple, this.appleX, this.appleY,this);
-            for(Cords cords : this.SNAKE_CORDS) {
-                g.drawImage(this.dot, cords.getX(), cords.getY(), this);
+        if(this.snake.isAlive()){
+            g.drawImage(this.apple.getIcon(), this.apple.getX(), this.apple.getY(),this);
+            for(Cords cords : this.snake.getCORDS()) {
+                g.drawImage(this.snake.getICON(), cords.getX(), cords.getY(), this);
             }
         } else{
             this.gameOver(g);
@@ -103,10 +81,10 @@ public class GameField extends JPanel implements ActionListener {
     }
 
     private void gameOver(Graphics g) {
-        String text = "Game Over";
+        String text = "ВЫ ПОГИБЛИ";
 
-        g.setColor(Color.white);
-        Font font = new Font("Arial",Font.PLAIN, 50);
+        g.setColor(new Color(239, 41, 41));
+        Font font = new Font("Arial", Font.PLAIN, 100);
         g.setFont(font);
 
         FontMetrics metrics = g.getFontMetrics(font);
@@ -116,117 +94,229 @@ public class GameField extends JPanel implements ActionListener {
         g.drawString(text, x, y);
     }
 
-    public void moveSnake(){
-        for(int i = this.SNAKE_CORDS.size() - 1; i > 0; i--) {
-            this.SNAKE_CORDS.get(i).setX(this.SNAKE_CORDS.get(i - 1).getX());
-            this.SNAKE_CORDS.get(i).setY(this.SNAKE_CORDS.get(i - 1).getY());
-        }
-
-        Cords headCords = this.SNAKE_CORDS.get(0);
-        if(left) {
-            headCords.setX(headCords.getX() - this.DOT_SIZE);
-        }
-        if(right) {
-            headCords.setX(headCords.getX() + this.DOT_SIZE);
-        }
-        if(up) {
-            headCords.setY(headCords.getY() - this.DOT_SIZE);
-        }
-        if(down) {
-            headCords.setY(headCords.getY() + this.DOT_SIZE);
-        }
-        this.moveKeyPressed = false;
-    }
-
-    public void checkApple(){
-        Cords headCords = this.SNAKE_CORDS.get(0);
-        if(headCords.getX() == this.appleX && headCords.getY() == this.appleY) {
-            this.SNAKE_CORDS.add(new Cords(-1,-1));
-            this.createApple();
+    public void checkAppleEaten() {
+        Cords headCords = this.snake.getCordsAt(0);
+        if(headCords.getX() == apple.getX() && headCords.getY() == apple.getY()) {
+            this.snake.addCords(-1, -1);
+            apple.create();
         }
     }
 
-    public void checkCollisions(){
-        Cords headCords = this.SNAKE_CORDS.get(0);
-
-        // Столкновения с собой
-        for(int i = this.SNAKE_CORDS.size() - 1; i > 3; i--) {
-            Cords peaceCords = this.SNAKE_CORDS.get(i);
-            if(headCords.getX() == peaceCords.getX() && headCords.getY() == peaceCords.getY()) {
-                this.inGame = false;
-                break;
-            }
-        }
-
-        // Выход за границы поля
-        if(headCords.getX() >= this.WIDTH) {
-            headCords.setX(-this.DOT_SIZE);
-            this.down = false;
-            this.up = false;
-            this.left = false;
-            this.right = true;
-        } else if(headCords.getX() < 0) {
-            headCords.setX(this.WIDTH - this.WIDTH % this.DOT_SIZE);
-            this.down = false;
-            this.up = false;
-            this.left = true;
-            this.right = false;
-        } else if(headCords.getY() >= this.HEIGHT) {
-            headCords.setY(-this.DOT_SIZE);
-            this.down = true;
-            this.up = false;
-            this.left = false;
-            this.right = false;
-        } else if(headCords.getY() < 0) {
-            headCords.setY(this.HEIGHT - this.HEIGHT % this.DOT_SIZE);
-            this.down = false;
-            this.up = true;
-            this.left = false;
-            this.right = false;
-        }
-    }
-
+    @Override
     public void actionPerformed(ActionEvent e) {
-        if(this.inGame){
-            this.checkApple();
-            this.checkCollisions();
-            this.moveSnake();
+        if(this.snake.isAlive()){
+            this.checkAppleEaten();
+            this.snake.checkCollisions();
+            this.snake.move();
         }
         this.repaint();
     }
 
     class FieldKeyListener extends KeyAdapter{
         public void keyPressed(KeyEvent e) {
-            if(!moveKeyPressed) {
+            if(!snake.isMoved()) {
                 super.keyPressed(e);
                 int key = e.getKeyCode();
 
-                if (key == KeyEvent.VK_LEFT && !right) {
-                    left = true;
-                    up = false;
-                    down = false;
+                if(key == KeyEvent.VK_LEFT && !(snake.getDirection() == Direction.right)) {
+                    snake.changeDirection(Direction.left);
                 }
-                if (key == KeyEvent.VK_RIGHT && !left) {
-                    right = true;
-                    up = false;
-                    down = false;
+                if(key == KeyEvent.VK_RIGHT && !(snake.getDirection() == Direction.left)) {
+                    snake.changeDirection(Direction.right);
                 }
-                if (key == KeyEvent.VK_UP && !down) {
-                    right = false;
-                    up = true;
-                    left = false;
+                if(key == KeyEvent.VK_UP && !(snake.getDirection() == Direction.down)) {
+                    snake.changeDirection(Direction.up);
                 }
-                if (key == KeyEvent.VK_DOWN && !up) {
-                    right = false;
-                    down = true;
-                    left = false;
+                if(key == KeyEvent.VK_DOWN && !(snake.getDirection() == Direction.up)) {
+                    snake.changeDirection(Direction.down);
                 }
-                moveKeyPressed = true;
+                snake.setMoved(true);
             }
         }
     }
 
-    static class Cords {
+    private class Apple {
+        private final Cords CORDS;
+        private final Image ICON;
+
+        public Apple(Image icon) {
+            this.CORDS = new Cords(0,0);
+            this.ICON = icon;
+        }
+
+        public void create() {
+            while(true) {
+                this.CORDS.setX(new Random().nextInt(WIDTH / DOT_SIZE) * DOT_SIZE);
+                this.CORDS.setY(new Random().nextInt(HEIGHT / DOT_SIZE) * DOT_SIZE);
+                Cords appleCords = new Cords(this.getX(), this.getY());
+
+                if(snake.checkCords(appleCords)) {
+                    continue;
+                }
+                break;
+            }
+        }
+
+        public int getX() {
+            return this.CORDS.getX();
+        }
+
+        public int getY() {
+            return this.CORDS.getY();
+        }
+
+        public Image getIcon() {
+            return this.ICON;
+        }
+    }
+
+    private class Snake {
+        private final ArrayList<Cords> CORDS;
+        private final Image ICON;
+
+        private boolean left = false;
+        private boolean right = true;
+        private boolean up = false;
+        private boolean down = false;
+
+        private boolean moved = false;
+        private boolean alive = true;
+
+        public Snake(Image icon, int snakeLength) {
+            this.CORDS = new ArrayList<>();
+            this.ICON = icon;
+
+            for(int i = 0; i < snakeLength; i++) {
+                this.addCords(DOT_SIZE * 5, DOT_SIZE * 5);
+            }
+        }
+
+        public boolean isAlive() {
+            return alive;
+        }
+
+        public boolean isMoved() {
+            return this.moved;
+        }
+
+        public void setMoved(boolean moved) {
+            this.moved = moved;
+        }
+
+        public void changeDirection(Direction direction) {
+            this.left = false;
+            this.right = false;
+            this.up = false;
+            this.down = false;
+
+            switch(direction) {
+                case left:
+                    this.left = true;
+                    break;
+                case right:
+                    this.right = true;
+                    break;
+                case up:
+                    this.up = true;
+                    break;
+                case down:
+                    this.down = true;
+                    break;
+            }
+        }
+
+        public Direction getDirection() {
+            if(this.left) {
+                return Direction.left;
+            }
+            if(this.right) {
+                return Direction.right;
+            }
+            if(this.up) {
+                return Direction.up;
+            }
+            if(this.down) {
+                return Direction.down;
+            }
+            return null;
+        }
+
+        public void move(){
+            for(int i = this.size(); i > 0; i--) {
+                this.getCordsAt(i).setX(this.getCordsAt(i - 1).getX());
+                this.getCordsAt(i).setY(this.getCordsAt(i - 1).getY());
+            }
+
+            Cords headCords = this.getCordsAt(0);
+            if(this.left) {
+                headCords.setX(headCords.getX() - DOT_SIZE);
+            }
+            if(this.right) {
+                headCords.setX(headCords.getX() + DOT_SIZE);
+            }
+            if(this.up) {
+                headCords.setY(headCords.getY() - DOT_SIZE);
+            }
+            if(this.down) {
+                headCords.setY(headCords.getY() + DOT_SIZE);
+            }
+            this.moved = false;
+        }
+
+        public void checkCollisions() {
+            Cords headCords = this.getCordsAt(0);
+
+            // Столкновения с собой
+            for(int i = this.size(); i > 3; i--) {
+                Cords peaceCords = this.getCordsAt(i);
+                if(headCords.getX() == peaceCords.getX() && headCords.getY() == peaceCords.getY()) {
+                    this.alive = false;
+                    break;
+                }
+            }
+
+            // Выход за границы поля
+            if(headCords.getX() >= WIDTH) {
+                headCords.setX(-DOT_SIZE);
+                this.changeDirection(Direction.right);
+            } else if(headCords.getX() < 0) {
+                headCords.setX(WIDTH - WIDTH % DOT_SIZE);
+                this.changeDirection(Direction.left);
+            } else if(headCords.getY() >= HEIGHT) {
+                headCords.setY(-DOT_SIZE);
+                this.changeDirection(Direction.down);
+            } else if(headCords.getY() < 0) {
+                headCords.setY(HEIGHT - HEIGHT % DOT_SIZE);
+                this.changeDirection(Direction.up);
+            }
+        }
+
+        public boolean checkCords(Cords cords) {
+            return this.CORDS.contains(cords);
+        }
+
+        public void addCords(int x, int y) {
+            this.CORDS.add(new Cords(x, y));
+        }
+
+        public Cords getCordsAt(int index) {
+            return this.CORDS.get(index);
+        }
+
+        public ArrayList<Cords> getCORDS() {
+            return CORDS;
+        }
+
+        public Image getICON() {
+            return ICON;
+        }
+
+        public int size() {
+            return this.CORDS.size() - 1;
+        }
+    }
+
+    private static class Cords {
         private int x;
         private int y;
 
