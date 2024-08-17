@@ -70,7 +70,7 @@ class GameField(
     }
 
     private fun checkAppleEaten() {
-        val headCords = snake.getCordsAt(0)
+        val headCords = snake.getHead()
         if (headCords.x == apple!!.getX() && headCords.y == apple!!.getY()) {
             snake.addCords(-1, -1)
             apple!!.create()

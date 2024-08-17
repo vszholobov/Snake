@@ -1,14 +1,16 @@
 package classes
 
 import java.awt.Image
+import java.util.LinkedList
 
 class Snake(val icon: Image, snakeLength: Int, private val gameFieldWidth: Int, private val gameFieldHeight: Int) {
-        val cords: ArrayList<Cords> = ArrayList()
+        val cords: LinkedList<Cords> = LinkedList()
         private var left = false
         private var right = true
         private var up = false
         private var down = false
         var isMoved = false
+        private var head: Cords = Cords(0,0)
         var isAlive = true
             private set
 
@@ -16,6 +18,7 @@ class Snake(val icon: Image, snakeLength: Int, private val gameFieldWidth: Int, 
             for (i in 0 until snakeLength) {
                 addCords(DOT_SIZE * 5, DOT_SIZE * 5)
             }
+            head = cords[0]
         }
 
         fun changeDirection(direction: Direction?) {
@@ -49,32 +52,32 @@ class Snake(val icon: Image, snakeLength: Int, private val gameFieldWidth: Int, 
             }
 
         fun move() {
-            for (i in this.size() downTo 1) {
-                getCordsAt(i).x = getCordsAt(i - 1).x
-                getCordsAt(i).y = getCordsAt(i - 1).y
-            }
-            val headCords = getCordsAt(0)
+            this.cords.removeAt(cords.size - 1)
+            val newHead = Cords(head.x, head.y)
+
             if (left) {
-                headCords.x = headCords.x - DOT_SIZE
+                newHead.x = head.x - DOT_SIZE
             }
             if (right) {
-                headCords.x = headCords.x + DOT_SIZE
+                newHead.x = head.x + DOT_SIZE
             }
             if (up) {
-                headCords.y = headCords.y - DOT_SIZE
+                newHead.y = head.y - DOT_SIZE
             }
             if (down) {
-                headCords.y = headCords.y + DOT_SIZE
+                newHead.y = head.y + DOT_SIZE
             }
+            this.cords.add(0, newHead)
+            head = newHead
             this.isMoved = false
         }
 
         fun checkCollisions() {
-            val headCords = getCordsAt(0)
+            val headCords = getHead()
 
             // Столкновения с собой
             for (i in this.size() downTo 4) {
-                val peaceCords = getCordsAt(i)
+                val peaceCords = cords[i]
                 if (headCords.x == peaceCords.x && headCords.y == peaceCords.y) {
                     this.isAlive = false
                     break
@@ -105,8 +108,8 @@ class Snake(val icon: Image, snakeLength: Int, private val gameFieldWidth: Int, 
             this.cords.add(Cords(x, y))
         }
 
-        fun getCordsAt(index: Int): Cords {
-            return this.cords[index]
+        fun getHead(): Cords {
+            return head
         }
 
         private fun size(): Int {

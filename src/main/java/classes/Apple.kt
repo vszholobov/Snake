@@ -18,7 +18,7 @@ class Apple(icon: Image, private val WIDTH: Int, private val HEIGHT: Int, privat
             CORDS.x = Random().nextInt(WIDTH / DOT_SIZE) * DOT_SIZE
             CORDS.y = Random().nextInt(HEIGHT / DOT_SIZE) * DOT_SIZE
             val appleCords = Cords(this.getX(), this.getY())
-            if (snake!!.checkCords(appleCords)) {
+            if (snake.checkCords(appleCords)) {
                 continue
             }
             break
