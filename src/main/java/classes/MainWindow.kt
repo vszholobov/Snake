@@ -16,12 +16,19 @@ class MainWindow : JFrame() {
         this.extendedState = MAXIMIZED_BOTH
         this.isUndecorated = true
         fieldSize = Toolkit.getDefaultToolkit().screenSize
-        gameField = GameField(fieldSize)
-        this.add(gameField)
-    }
+        val snakeIcon = Toolkit.getDefaultToolkit().getImage(this.javaClass.getResource("/dot.png"))
 
-    fun close() {
-        this.removeAll()
-        dispose()
+        val snake = Snake(
+            snakeIcon,
+            3,
+            fieldSize.width,
+            fieldSize.height
+        )
+        gameField = GameField(
+            fieldSize.width,
+            fieldSize.height,
+            snake
+        )
+        this.add(gameField)
     }
 }
