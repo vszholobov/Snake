@@ -1,3 +1,5 @@
+import java.util.List;
+
 import classes.MainWindow;
 import classes.MusicPlayer;
 
@@ -8,7 +10,7 @@ public class Main {
         MainWindow window = new MainWindow();
         window.setVisible(true);
 
-        MusicPlayer player = new MusicPlayer(new String[] {"sound.mp3", "sound1.mp3"});
+        MusicPlayer player = new MusicPlayer(List.of("sound.mp3", "sound1.mp3"));
         try {
             player.changeVolume(0.1f);
         } catch (LineUnavailableException e) {

@@ -1,28 +1,27 @@
-package classes;
+package classes
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension
+import java.awt.Toolkit
+import javax.swing.JFrame
 
-public class MainWindow extends JFrame {
-    private GameField gameField;
-    private Dimension fieldSize;
+class MainWindow : JFrame() {
+    private val gameField: GameField
+    private val fieldSize: Dimension
 
-    public MainWindow() {
-        this.setTitle("Змейка");
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    init {
+        title = "Змейка"
+        defaultCloseOperation = EXIT_ON_CLOSE
 
         // Полноэкранный режим
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        this.setUndecorated(true);
-
-        this.fieldSize = Toolkit.getDefaultToolkit().getScreenSize();
-        this.gameField = new GameField(this.fieldSize);
-
-        this.add(this.gameField);
+        this.extendedState = MAXIMIZED_BOTH
+        this.isUndecorated = true
+        fieldSize = Toolkit.getDefaultToolkit().screenSize
+        gameField = GameField(fieldSize)
+        this.add(gameField)
     }
 
-    public void close() {
-        this.removeAll();
-        this.dispose();
+    fun close() {
+        this.removeAll()
+        dispose()
     }
 }
