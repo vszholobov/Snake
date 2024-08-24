@@ -1,4 +1,4 @@
-package classes
+package snake
 
 import java.awt.Image
 import java.util.Random

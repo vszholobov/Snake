@@ -1,4 +1,4 @@
-package classes
+package snake
 
 // Направления движения змейки
 enum class Direction {

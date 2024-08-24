@@ -1,4 +1,4 @@
-package classes
+package snake
 
 class Cords(var x: Int, var y: Int) {
 

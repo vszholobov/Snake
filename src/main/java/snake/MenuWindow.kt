@@ -1,10 +1,10 @@
-package classes
+package snake
 
 import java.awt.Dimension
 import java.awt.Toolkit
 import javax.swing.JFrame
 
-class MainWindow : JFrame() {
+class MenuWindow : JFrame() {
     private val gameField: GameField
     private val fieldSize: Dimension
 

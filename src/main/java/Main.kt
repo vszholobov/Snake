@@ -1,5 +1,5 @@
-import classes.MainWindow
-import classes.MusicPlayer
+import snake.MainWindow
+import snake.MusicPlayer
 import javax.sound.sampled.LineUnavailableException
 
 object Main {
@@ -14,6 +14,6 @@ object Main {
             e.printStackTrace()
         }
         player.start()
-        player.interrupt()
+        player.join()
     }
 }
