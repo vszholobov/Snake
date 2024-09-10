@@ -4,7 +4,6 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Point
-import java.awt.Toolkit
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.KeyAdapter
@@ -16,11 +15,11 @@ import javax.swing.Timer
 class GameField(
     private val width: Int,
     private val height: Int,
-    val snake: Snake
+    val snake: Snake,
+    private val apple: Apple
 ) : JPanel(), ActionListener {
     // Отвечает за скорость игры. Чем меньше, тем быстрее.
     private var speed = 15
-    private var apple: Apple? = null
 
     init {
         background = Color.black
@@ -35,21 +34,15 @@ class GameField(
     }
 
     private fun initGame() {
-        try {
-            val appleIcon = Toolkit.getDefaultToolkit().getImage(this.javaClass.getResource("/apple.png"))
-            apple = Apple(appleIcon, width, height, snake)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         val timer = Timer(speed, this)
         timer.start()
-        apple!!.create()
+        apple.create()
     }
 
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
         if (snake.isAlive) {
-            g.drawImage(apple!!.ICON, apple!!.getX(), apple!!.getY(), this)
+            g.drawImage(apple.ICON, apple.getX(), apple.getY(), this)
             for (cords in snake.cords) {
                 g.drawImage(snake.icon, cords.x, cords.y, this)
             }
@@ -71,9 +64,9 @@ class GameField(
 
     private fun checkAppleEaten() {
         val headCords = snake.getHead()
-        if (headCords.x == apple!!.getX() && headCords.y == apple!!.getY()) {
+        if (headCords.x == apple.getX() && headCords.y == apple.getY()) {
             snake.addCords(-1, -1)
-            apple!!.create()
+            apple.create()
         }
     }
 

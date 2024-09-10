@@ -6,7 +6,6 @@ import javax.swing.JFrame
 
 class MainWindow : JFrame() {
     private val gameField: GameField
-    private val fieldSize: Dimension
 
     init {
         title = "Змейка"
@@ -15,19 +14,32 @@ class MainWindow : JFrame() {
         // Полноэкранный режим
         this.extendedState = MAXIMIZED_BOTH
         this.isUndecorated = true
-        fieldSize = Toolkit.getDefaultToolkit().screenSize
+
+        val screenSize = Toolkit.getDefaultToolkit().screenSize
+        val fieldWidth = screenSize.width
+        val fieldHeight = screenSize.height
+
         val snakeIcon = Toolkit.getDefaultToolkit().getImage(this.javaClass.getResource("/dot.png"))
+        val appleIcon = Toolkit.getDefaultToolkit().getImage(this.javaClass.getResource("/apple.png"))
 
         val snake = Snake(
             snakeIcon,
             3,
-            fieldSize.width,
-            fieldSize.height
+            fieldWidth,
+            fieldHeight
+        )
+
+        val apple = Apple(
+            appleIcon,
+            fieldWidth,
+            fieldHeight,
+            snake
         )
         gameField = GameField(
-            fieldSize.width,
-            fieldSize.height,
-            snake
+            fieldWidth,
+            fieldHeight,
+            snake,
+            apple
         )
         this.add(gameField)
     }
